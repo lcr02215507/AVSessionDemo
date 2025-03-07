@@ -8,6 +8,7 @@
 #import "ViewController.h"
 #import <AVFoundation/AVFoundation.h>
 #import <MediaPlayer/MediaPlayer.h>
+#import "WowAvasManager.h"
 
 @interface ViewController ()<AVAudioPlayerDelegate>
 
@@ -55,10 +56,10 @@
     [self.view addSubview:stopB];
     
     UIButton *soloB = [UIButton buttonWithType:UIButtonTypeCustom];
-    [soloB setTitle:@"获取焦点" forState:UIControlStateNormal];
+    [soloB setTitle:@"设置Playback模式并获取焦点" forState:UIControlStateNormal];
     [soloB setBackgroundColor:[UIColor purpleColor]];
     [soloB addTarget:self action:@selector(solo) forControlEvents:UIControlEventTouchUpInside];
-    soloB.frame = CGRectMake(100, 500, 200, 60);
+    soloB.frame = CGRectMake(30, 500, 300, 60);
     [self.view addSubview:soloB];
     
     UIButton *nogetB = [UIButton buttonWithType:UIButtonTypeCustom];
@@ -74,20 +75,14 @@
 -(void)solo{
     // [AVAudioSession sharedInstance] 当前应用的单例，设置当前应用
     // withOptions:
-    NSError *error = nil;
-    if ([[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback withOptions:AVAudioSessionCategoryOptionDuckOthers error:&error] == NO){
-        NSLog(@"%@",error);
-        return;
+    //withOptions:AVAudioSessionCategoryOptionDuckOthers
+    if ([[WowAvasManager sharedInstance] setAvsCategory:AvsCategoryTypePlayback withOptions:AvsCategoryOptionOptionMixWithOthers] && [[WowAvasManager sharedInstance] setAvsActive:YES withOptions:NO]){
+        if(![self.player isPlaying]){
+            [self.player play];
+            [self.playBtn setTitle:@"暂停" forState:UIControlStateNormal];
+        }
     }
-    error = nil;
-    if ([[AVAudioSession sharedInstance] setActive:YES error:&error] == NO){
-        NSLog(@"%@",error);
-        return;
-    }
-    if(![self.player isPlaying]){
-        [self.player play];
-        [self.playBtn setTitle:@"暂停" forState:UIControlStateNormal];
-    }
+    NSLog(@"%@",[AVAudioSession sharedInstance].category);
 }
 // 释放焦点
 -(void)noget
@@ -97,12 +92,7 @@
         [self.playBtn setTitle:@"播放" forState:UIControlStateNormal];
     }
     
-    NSError *error = nil;
-    // AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation 释放的同时别的app会收到通知，继续播放
-    if ([[AVAudioSession sharedInstance] setActive:NO withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error:&error] == NO){
-        NSLog(@"%@",error);
-        return;
-    }
+    [[WowAvasManager sharedInstance] setAvsActive:YES withOptions:YES];
 }
 
 -(void)play
@@ -130,18 +120,18 @@
         [self.playBtn setTitle:@"播放" forState:UIControlStateNormal];
     }
 }
--(void)audioPlayerBeginInterruption:(AVAudioPlayer *)player{
-    if (player == _player){
-        NSLog(@"播放被中断");
-    }
-}
-
--(void)audioPlayerEndInterruption:(AVAudioPlayer *)player
-{
-    if (player == _player){
-        [self play];
-    }
-}
+//-(void)audioPlayerBeginInterruption:(AVAudioPlayer *)player{
+//    if (player == _player){
+//        NSLog(@"播放被中断");
+//    }
+//}
+//
+//-(void)audioPlayerEndInterruption:(AVAudioPlayer *)player
+//{
+//    if (player == _player){
+//        [self play];
+//    }
+//}
 
 @end
 
